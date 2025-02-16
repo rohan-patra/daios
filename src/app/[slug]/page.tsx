@@ -388,13 +388,14 @@ export default function DaoPage({ params }: Props) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-96 w-full overflow-hidden rounded-lg">
+                <div className="relative h-96 w-full overflow-hidden rounded-lg">
                   <iframe
                     src="https://www.gmgn.cc/kline/eth/0x6982508145454ce325ddbe47a25d4ec3d2311933"
                     className="h-full w-full border-none"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
+                  <div className="absolute bottom-0 h-10 w-full bg-[#211d47]" />
                 </div>
               </CardContent>
             </Card>
