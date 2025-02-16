@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 import { Inter } from "next/font/google";
 import { type Metadata } from "next";
 import { Toaster } from "sonner";
+import { Web3Provider } from "@/providers/web3-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,8 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.className}`}>
       <body>
-        {children}
-        <Toaster theme="dark" position="top-center" />
+        <Web3Provider>
+          {children}
+          <Toaster theme="dark" position="top-center" />
+        </Web3Provider>
       </body>
     </html>
   );

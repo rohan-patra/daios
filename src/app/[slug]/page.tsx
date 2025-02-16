@@ -340,7 +340,11 @@ export default function DaoPage({ params }: Props) {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <AIChatDialog />
+            <AIChatDialog
+              daoName={dao.name}
+              tokenSymbol={dao.tokenSymbol}
+              criteria={dao.eligibilityCriteria}
+            />
             <Button
               variant="outline"
               className="h-11 border-[#3d3470] bg-[#6064f4] px-6 font-medium text-white hover:bg-transparent hover:text-white"

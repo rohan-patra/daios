@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +12,16 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Github, Twitter, Wallet, Heart } from "lucide-react";
+import { Github, Twitter, Wallet, Heart, Loader2 } from "lucide-react";
+import { type ChatResponse } from "@/types/chat";
+import { useAccount, useSignMessage } from "wagmi";
+import { type Address } from "viem";
+import {
+  connectGitHub,
+  connectTwitter,
+  connectWallet,
+} from "@/services/connections";
+import { toast } from "sonner";
 
 type MessageType =
   | { type: "user" | "assistant"; content: string }
@@ -22,112 +31,281 @@ type MessageType =
       criteria: Array<{ title: string; description: string; icon: string }>;
     };
 
-const mockMessages: MessageType[] = [
-  {
-    type: "assistant",
-    content: "Welcome to dAIo! I'm here to evaluate your application to join.",
-  },
-  {
-    type: "user",
-    content: "Hi! I'm interested in joining this DAO. What do I need to do?",
-  },
-  {
-    type: "assistant",
-    content:
-      "I'll help assess if you're a good fit for our community. First, let me share our eligibility criteria:",
-  },
-  {
-    type: "criteria",
-    criteria: [
-      {
-        title: "GitHub Activity",
-        description:
-          "Active contributions to blockchain/DeFi projects, smart contract development experience",
-        icon: "github",
-      },
-      {
-        title: "Community Engagement",
-        description:
-          "Active participation in web3 discussions, meaningful interactions with other DAOs",
-        icon: "twitter",
-      },
-      {
-        title: "On-Chain Activity",
-        description:
-          "History of DeFi protocol usage, governance participation, and responsible token management",
-        icon: "wallet",
-      },
-      {
-        title: "Personal Qualities",
-        description:
-          "Eager to learn and share knowledge about DeFi, passionate about decentralized governance, and committed to collaborative decision-making",
-        icon: "generic",
-      },
-    ],
-  },
-  {
-    type: "assistant",
-    content:
-      "To verify these criteria, could you please connect your accounts?",
-  },
-  { type: "github" },
-  {
-    type: "assistant",
-    content:
-      "Thanks for connecting your GitHub! I see you're active in blockchain development with several DeFi contributions. I'm particularly impressed by your smart contract work. Would you like to connect your Twitter to show your community engagement?",
-  },
-  { type: "user", content: "Sure, I'll connect my Twitter account now." },
-  { type: "twitter" },
-  {
-    type: "assistant",
-    content:
-      "Excellent! I can see you're quite active in the web3 space, with thoughtful discussions about DeFi and governance. Your engagement with other DAOs shows valuable experience. Could you connect your wallet so I can verify your on-chain activity?",
-  },
-  { type: "wallet" },
-  {
-    type: "assistant",
-    content:
-      "Perfect! I've analyzed your profiles and on-chain activity. I can see you've been actively participating in DeFi protocols and have a history of governance voting. You seem like a great fit for our DAO. Could you tell me more about why you want to join and what you hope to contribute?",
-  },
-  {
-    type: "user",
-    content:
-      "I'm passionate about DeFi governance and have experience in protocol design. I'd love to help shape the future of decentralized finance.",
-  },
-  {
-    type: "assistant",
-    content:
-      "Your background in protocol design is very relevant to our mission. I see you've also contributed to several improvement proposals in other DAOs. What specific areas of our protocol interest you the most?",
-  },
-  {
-    type: "user",
-    content:
-      "I'm particularly interested in optimizing the tokenomics model and improving governance participation through better incentive structures.",
-  },
-  {
-    type: "assistant",
-    content:
-      "Those are exactly the areas we're focusing on! Your experience with incentive design could be valuable for our upcoming governance updates. One last question: how do you think DAOs can better balance decentralization with efficient decision-making?",
-  },
-  {
-    type: "user",
-    content:
-      "I believe in implementing tiered governance structures with delegated voting for routine decisions, while maintaining full community participation for major protocol changes. This helps maintain both efficiency and decentralization.",
-  },
-  {
-    type: "assistant",
-    content:
-      "Your understanding of governance dynamics is impressive! Based on your technical background, community engagement, and thoughtful approach to DAO governance, I'm happy to approve your membership. Welcome to the DAO! Would you like me to guide you through the onboarding process?",
-  },
-];
+interface ToolCallCheck {
+  type: string;
+  account_type: string;
+}
 
-export function AIChatDialog() {
+const isChatResponse = (data: unknown): data is ChatResponse => {
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    !("message" in data) ||
+    !("chatId" in data) ||
+    !("status" in data)
+  ) {
+    return false;
+  }
+
+  const response = data as Record<string, unknown>;
+
+  if (
+    typeof response.message !== "string" ||
+    typeof response.chatId !== "string" ||
+    !["in_progress", "accepted", "rejected"].includes(response.status as string)
+  ) {
+    return false;
+  }
+
+  if (response.toolCalls) {
+    if (!Array.isArray(response.toolCalls)) return false;
+
+    for (const call of response.toolCalls) {
+      const toolCall = call as ToolCallCheck;
+      if (
+        typeof toolCall !== "object" ||
+        toolCall === null ||
+        typeof toolCall.type !== "string" ||
+        toolCall.type !== "connection_request" ||
+        typeof toolCall.account_type !== "string" ||
+        !["github", "twitter", "wallet"].includes(toolCall.account_type)
+      ) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+};
+
+export function AIChatDialog({
+  daoName,
+  tokenSymbol,
+  criteria,
+}: {
+  daoName: string;
+  tokenSymbol: string;
+  criteria: Array<{ title: string; description: string; icon: string }>;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<MessageType[]>([]);
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [status, setStatus] = useState<"in_progress" | "accepted" | "rejected">(
+    "in_progress",
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [connectedAccounts, setConnectedAccounts] = useState({
+    github: false,
+    twitter: false,
+    wallet: false,
+  });
+  const [connectedData, setConnectedData] = useState<{
+    github?: string;
+    twitter?: string;
+    wallet?: Address;
+  }>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+  const { address } = useAccount();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+  const { signMessageAsync } = useSignMessage();
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      void handleInitialMessage();
+    }
+  }, [isOpen]);
+
+  const handleResponse = (data: ChatResponse) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const toolCalls = data.toolCalls ?? [];
+    for (const toolCall of toolCalls) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (toolCall.type === "connection_request") {
+        setMessages((prev) => [
+          ...prev,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          { type: toolCall.account_type as "github" | "twitter" | "wallet" },
+        ]);
+      }
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      { type: "assistant", content: data.message },
+    ]);
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (data.status !== "in_progress") {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      setStatus(data.status);
+    }
+  };
+
+  const handleInitialMessage = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: "Hi, I'm interested in joining this DAO.",
+          daoName,
+          tokenSymbol,
+          criteria,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `Server responded with ${response.status}: ${errorText}`,
+          {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+          },
+        );
+        throw new Error(
+          `Failed to send message: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const data = await response.json();
+
+      if (!isChatResponse(data)) {
+        throw new Error("Invalid response format");
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      setChatId(data.chatId);
+      setMessages([
+        {
+          type: "criteria",
+          criteria,
+        },
+      ]);
+      handleResponse(data);
+    } catch (error) {
+      console.error("Error in handleInitialMessage:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", error.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAccountConnection = async (
+    type: "github" | "twitter" | "wallet",
+  ) => {
+    try {
+      let result;
+      if (type === "github") {
+        result = await connectGitHub();
+      } else if (type === "twitter") {
+        result = await connectTwitter();
+      } else {
+        if (!address || !signMessageAsync) {
+          toast.error("Please connect your wallet first");
+          return;
+        }
+        result = await connectWallet(async (message) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+          const signature = await signMessageAsync({ message });
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          return address;
+        });
+      }
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error ?? "Failed to connect account");
+      }
+
+      setConnectedAccounts((prev) => ({ ...prev, [type]: true }));
+      setConnectedData((prev) => ({ ...prev, ...result.data }));
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: `${type} account connected: ${Object.values(result.data)[0]}`,
+          chatId,
+          daoName,
+          tokenSymbol,
+          criteria,
+          accountConnection: {
+            type,
+            connected: true,
+            data: result.data,
+          },
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to send message");
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const data = await response.json();
+
+      if (!isChatResponse(data)) {
+        throw new Error("Invalid response format");
+      }
+
+      handleResponse(data);
+    } catch (error) {
+      console.error("Error handling account connection:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to connect account",
+      );
+      setConnectedAccounts((prev) => ({ ...prev, [type]: false }));
+      setConnectedData((prev) => {
+        const newData = { ...prev };
+        delete newData[type];
+        return newData;
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage = input;
     setInput("");
+    setMessages((prev) => [...prev, { type: "user", content: userMessage }]);
+
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMessage,
+          chatId,
+          daoName,
+          tokenSymbol,
+          criteria,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to send message");
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const data = await response.json();
+
+      if (!isChatResponse(data)) {
+        throw new Error("Invalid response format");
+      }
+
+      handleResponse(data);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -145,7 +323,7 @@ export function AIChatDialog() {
         </DialogHeader>
         <div className="flex flex-grow flex-col overflow-hidden py-6">
           <ScrollArea className="flex-grow px-6">
-            {mockMessages.map((message, index) => (
+            {messages.map((message, index) => (
               <div key={index} className="mb-6 pr-4 last:mb-2">
                 {message.type === "user" || message.type === "assistant" ? (
                   <div
@@ -203,6 +381,11 @@ export function AIChatDialog() {
                   <div className="flex justify-start pl-4">
                     <Button
                       variant="outline"
+                      onClick={() =>
+                        handleAccountConnection(
+                          message.type as "github" | "twitter" | "wallet",
+                        )
+                      }
                       className={`group relative flex items-center gap-2 overflow-hidden rounded-xl border-[#3d3470] p-3 transition-all duration-300 hover:scale-105 ${
                         message.type === "github"
                           ? "bg-gradient-to-r from-[#24292e] to-[#1a1f24] text-white hover:border-[#3d3470]/80"
@@ -214,17 +397,26 @@ export function AIChatDialog() {
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       {message.type === "github" && (
                         <>
-                          <Github size={18} /> Connect GitHub
+                          <Github size={18} />{" "}
+                          {connectedAccounts.github
+                            ? "Connected"
+                            : "Connect GitHub"}
                         </>
                       )}
                       {message.type === "twitter" && (
                         <>
-                          <Twitter size={18} /> Connect Twitter
+                          <Twitter size={18} />{" "}
+                          {connectedAccounts.twitter
+                            ? "Connected"
+                            : "Connect Twitter"}
                         </>
                       )}
                       {message.type === "wallet" && (
                         <>
-                          <Wallet size={18} /> Connect Wallet
+                          <Wallet size={18} />{" "}
+                          {connectedAccounts.wallet
+                            ? "Connected"
+                            : "Connect Wallet"}
                         </>
                       )}
                     </Button>
@@ -232,6 +424,17 @@ export function AIChatDialog() {
                 )}
               </div>
             ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="relative max-w-[80%] rounded-2xl border border-[#3d3470] bg-[#13102b]/80 p-4 text-[#e0d9ff]">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-[#14f195]" />
+                    <span>Thinking...</span>
+                  </div>
+                  <div className="absolute -bottom-1 -left-1 h-4 w-4 rotate-45 border border-l-0 border-t-0 border-[#3d3470] bg-[#13102b]/80" />
+                </div>
+              </div>
+            )}
           </ScrollArea>
           <form
             onSubmit={handleSubmit}
@@ -241,13 +444,19 @@ export function AIChatDialog() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your message..."
+              disabled={status !== "in_progress" || isLoading}
               className="mr-2 flex-grow rounded-xl border-[#3d3470] bg-[#13102b]/80 text-[#e0d9ff] placeholder:text-[#b3a8e0] focus-visible:ring-1 focus-visible:ring-[#14f195]"
             />
             <Button
               type="submit"
+              disabled={status !== "in_progress" || isLoading}
               className="rounded-xl bg-gradient-to-r from-[#14f195] to-[#0dc77b] text-[#13102b] shadow-[0_2px_8px_rgba(20,241,149,0.25)] transition-all duration-300 hover:scale-105 hover:shadow-[0_2px_12px_rgba(20,241,149,0.35)]"
             >
-              Send
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Send"
+              )}
             </Button>
           </form>
         </div>
