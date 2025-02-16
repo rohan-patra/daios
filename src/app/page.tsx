@@ -148,23 +148,25 @@ export default function LandingPage() {
                   fair, transparent, and merit-based community growth.
                 </p>
               </motion.div>
-              <motion.div className="space-x-4" variants={fadeInUp}>
-                <MotionButton
-                  className="bg-[#14f195] text-[#13102b] hover:bg-[#0dc77b]"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Get Started
-                </MotionButton>
-                <MotionButton
-                  variant="outline"
-                  className="border-[#14f195] bg-transparent text-[#14f195] hover:bg-[#14f195]/10"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Learn More
-                </MotionButton>
-              </motion.div>
+              <Link href="/launch">
+                <motion.div className="space-x-4" variants={fadeInUp}>
+                  <MotionButton
+                    className="bg-[#14f195] text-[#13102b] hover:bg-[#0dc77b]"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Get Started
+                  </MotionButton>
+                  <MotionButton
+                    variant="outline"
+                    className="border-[#14f195] bg-transparent text-[#14f195] hover:bg-[#14f195]/10"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Learn More
+                  </MotionButton>
+                </motion.div>
+              </Link>
             </motion.div>
           </div>
         </section>
@@ -467,16 +469,15 @@ export default function LandingPage() {
                     placeholder="Enter your email"
                     type="email"
                   />
-                  <Link href="/launch">
-                    <MotionButton
-                      className="bg-[#14f195] text-[#13102b] hover:bg-[#0dc77b]"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Get Started
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </MotionButton>
-                  </Link>
+
+                  <MotionButton
+                    className="bg-[#14f195] text-[#13102b] hover:bg-[#0dc77b]"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </MotionButton>
                 </form>
                 <p className="text-xs text-[#b3a8e0]">
                   By signing up, you agree to our{" "}
