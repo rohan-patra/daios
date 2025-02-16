@@ -87,27 +87,31 @@ contract DaoToken is ERC20, Ownable, Pausable {
         (bool success, ) = owner().call{value: creatorAmount}("");
         require(success, "Creator transfer failed");
         
-        // Calculate token amount for liquidity (same value as ETH at mint price)
-        uint256 tokenAmount = (liquidityAmount * 1e18) / mintPrice;
-        _mint(address(this), tokenAmount);
-        
-        // Approve router to spend tokens
-        _approve(address(this), address(UNISWAP_ROUTER), tokenAmount);
-        
-        // Add liquidity to Uniswap
-        (uint256 tokensSent, uint256 ethSent,) = UNISWAP_ROUTER.addLiquidityETH{value: liquidityAmount}(
-            address(this),
-            tokenAmount,
-            0, // Accept any amount of tokens
-            0, // Accept any amount of ETH
-            owner(), // Send LP tokens to owner
-            block.timestamp + 300 // 5 minute deadline
-        );
+        // Only seed liquidity if there are enough fees
+        if (liquidityAmount > 0) {
+            // Calculate token amount for liquidity (same value as ETH at mint price)
+            uint256 tokenAmount = (liquidityAmount * 1e18) / mintPrice;
+            _mint(address(this), tokenAmount);
+            
+            // Approve router to spend tokens
+            _approve(address(this), address(UNISWAP_ROUTER), tokenAmount);
+            
+            // Add liquidity to Uniswap
+            (uint256 tokensSent, uint256 ethSent,) = UNISWAP_ROUTER.addLiquidityETH{value: liquidityAmount}(
+                address(this),
+                tokenAmount,
+                0, // Accept any amount of tokens
+                0, // Accept any amount of ETH
+                owner(), // Send LP tokens to owner
+                block.timestamp + 300 // 5 minute deadline
+            );
+            
+            emit LiquiditySeeded(tokensSent, ethSent);
+        }
         
         liquiditySeeded = true;
         _pause(); // Pause minting after seeding liquidity
         
-        emit LiquiditySeeded(tokensSent, ethSent);
         emit FeesDistributed(creatorAmount, liquidityAmount);
     }
 

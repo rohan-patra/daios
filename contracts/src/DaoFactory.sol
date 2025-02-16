@@ -58,11 +58,8 @@ contract DaoFactory {
             maxMintPerNFT
         );
 
-        // Mint first NFT to creator for initial token minting
-        uint256 tokenId = nftContract.mint(msg.sender);
-
-        // Mint the initial supply to the DAO creator
-        tokenContract.mint{value: tokenInitialSupply * mintPrice}(tokenId, tokenInitialSupply);
+        // Mint first NFT to creator
+        nftContract.mint(msg.sender);
 
         daos.push(
             Dao({

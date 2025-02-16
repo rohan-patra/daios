@@ -18,9 +18,15 @@ import {
   Heart,
   Loader2,
 } from "lucide-react";
-import { useAccount, useConnect } from "wagmi";
+import {
+  useAccount,
+  useConnect,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import { toast } from "sonner";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
+import { parseEther } from "viem";
 
 type Step = {
   title: string;
@@ -63,6 +69,24 @@ type GenerateCriteriaResponse = {
   }>;
 };
 
+const DAOFACTORY_ADDRESS = "0x897D2065a4ac35B97D8c9063037C56D7b6004c4b";
+const DAOFACTORY_ABI = [
+  {
+    type: "function",
+    name: "createDao",
+    inputs: [
+      { name: "baseURI", type: "string", internalType: "string" },
+      { name: "tokenName", type: "string", internalType: "string" },
+      { name: "tokenSymbol", type: "string", internalType: "string" },
+      { name: "tokenInitialSupply", type: "uint256", internalType: "uint256" },
+      { name: "mintPrice", type: "uint256", internalType: "uint256" },
+      { name: "maxMintPerNFT", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+] as const;
+
 export default function LaunchPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
@@ -79,12 +103,26 @@ export default function LaunchPage() {
     generatedCriteria: null,
   });
 
+  const { writeContract, data: hash } = useWriteContract();
+
+  const { isLoading: isDeploying, isSuccess: isDeployed } =
+    useWaitForTransactionReceipt({
+      hash,
+    });
+
   useEffect(() => {
     if (address) {
       console.log("Connected wallet address:", address);
       toast.success("Wallet connected successfully!");
     }
   }, [address]);
+
+  useEffect(() => {
+    if (hash) {
+      toast.success("Transaction submitted!");
+      router.push(`/defi-governance`);
+    }
+  }, [hash, router]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -163,6 +201,38 @@ export default function LaunchPage() {
 
     // TODO: Save DAO configuration and create new DAO
     router.push("/defi-governance");
+  };
+
+  const handleDeploy = async () => {
+    if (!isConnected) {
+      try {
+        await open();
+        return;
+      } catch (error) {
+        console.error("Failed to connect wallet:", error);
+        toast.error("Failed to connect wallet. Please try again.");
+        return;
+      }
+    }
+
+    try {
+      writeContract({
+        address: DAOFACTORY_ADDRESS,
+        abi: DAOFACTORY_ABI,
+        functionName: "createDao",
+        args: [
+          "https://test-metadata.com/", // baseURI (string)
+          "Test DAO", // tokenName (string)
+          "TEST", // tokenSymbol (string)
+          0n, // tokenInitialSupply (uint256)
+          1000000000000000n, // mintPrice (uint256) - 0.001 ETH in wei
+          1000n, // maxMintPerNFT (uint256)
+        ] as const,
+      });
+    } catch (error) {
+      console.error("Error deploying DAO:", error);
+      toast.error("Failed to deploy DAO");
+    }
   };
 
   return (
@@ -425,10 +495,19 @@ export default function LaunchPage() {
           {currentStep === steps.length - 1 ? (
             <Button
               className="bg-[#14f195] text-[#13102b] hover:bg-[#0dc77b]"
-              onClick={handleLaunch}
+              onClick={handleDeploy}
+              disabled={isDeploying}
             >
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Launch DAO
+              {isDeploying ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deploying...
+                </>
+              ) : isConnected ? (
+                "Deploy DAO"
+              ) : (
+                "Connect Wallet"
+              )}
             </Button>
           ) : (
             <Button
