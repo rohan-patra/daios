@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,9 @@ import {
   Heart,
   Loader2,
 } from "lucide-react";
+import { useAccount, useConnect } from "wagmi";
+import { toast } from "sonner";
+import { useWeb3Modal } from "@web3modal/wagmi/react";
 
 type Step = {
   title: string;
@@ -64,6 +67,9 @@ export default function LaunchPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { open } = useWeb3Modal();
   const [daoConfig, setDaoConfig] = useState<DaoConfig>({
     name: "",
     description: "",
@@ -72,6 +78,13 @@ export default function LaunchPage() {
     systemPrompt: "",
     generatedCriteria: null,
   });
+
+  useEffect(() => {
+    if (address) {
+      console.log("Connected wallet address:", address);
+      toast.success("Wallet connected successfully!");
+    }
+  }, [address]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -133,7 +146,21 @@ export default function LaunchPage() {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
-  const handleLaunch = () => {
+  const handleLaunch = async () => {
+    if (!isConnected) {
+      try {
+        await open();
+        if (!address) {
+          toast.error("Please connect your wallet to continue");
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to connect wallet:", error);
+        toast.error("Failed to connect wallet. Please try again.");
+        return;
+      }
+    }
+
     // TODO: Save DAO configuration and create new DAO
     router.push("/defi-governance");
   };
