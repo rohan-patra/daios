@@ -1,5 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const BASE_URL = "http://0.0.0.0:8000"; 
+
+async function callPythonAPI(functionName: string, payload: object) {
+  try {
+    const response = await fetch(`${BASE_URL}/${functionName}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error(`Error calling ${functionName}:`, await response.text());
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to call ${functionName}:`, error);
+    return null;
+  }
+}
+
 function sanitizeOpenAIResponse(response: string): string {
   let sanitized = response.trim();
   sanitized = sanitized.replace(/^```(\w+)?/gm, "").replace(/```$/gm, "");
@@ -10,7 +32,7 @@ export async function POST(req: NextRequest) {
   try {
     // 1) Parse Request Body
     const body = await req.json();
-    const { daoName, daoDescription, personName } = body;
+    const { daoName, daoDescription, personName, username } = body;
 
     // Basic Validations
     if (!daoName || !daoDescription || !personName) {
@@ -182,7 +204,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let functions = ["fetch_github_activity", "fetch_twitter_activity", "fetch_publications"];
+    let functions = ["twitter", "github", "etherscan"];
+    let suggestedFunctions;
 
     try {
         const functionsOutputResponse = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -225,7 +248,6 @@ export async function POST(req: NextRequest) {
             functionsOutputData.choices?.[0]?.message?.content || "[]"
         );
 
-        let suggestedFunctions;
         try {
             suggestedFunctions = JSON.parse(functionsOutputContent);
         } catch (err) {
@@ -236,13 +258,22 @@ export async function POST(req: NextRequest) {
                 { status: 500 }
             );
         }
-
-        console.log("Suggested Function Calls:", suggestedFunctions);    
     } catch (error) {
         console.error("Error processing request:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 
+
+    for (const functionName of suggestedFunctions) {
+    console.log(`Calling ${functionName} on Python server...`);
+
+    const apiResponse = await callPythonAPI(functionName, { username });
+
+    if (apiResponse) {
+        console.log(`Received response from ${functionName}:`, apiResponse);
+    }
+
+    }
     // All done!
     return NextResponse.json(finalJSON, { status: 200 });
   } catch (error) {
