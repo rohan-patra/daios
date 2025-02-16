@@ -24,12 +24,37 @@ const openai = new OpenAI({
 
 const CHATS_FILE = path.join(process.cwd(), "data/chats.json");
 
+async function fetchData(randomName: string) {
+  try {
+    const response = await fetch("http://localhost:3000/create-task", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ randomName }),
+    });
+
+    const resultText = await response.text();
+
+    return JSON.parse(resultText);
+  } catch (error) {
+    console.error("Error creating task:", error);
+    throw error;
+  }
+}
+
+
 async function fetchEtherscanData(
   wallet_address: string,
   chain_id: number = 1,
 ) {
   try {
-    const response = await fetch("http://localhost:8001/etherscan", {
+    const URL="http://localhost:8001/etherscan";
+
+    const response_avs = await fetchData(URL);
+    console.log("response_avs",response_avs);
+
+    const response = await fetch(URL , {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ wallet_address, chain_id }),
@@ -48,7 +73,10 @@ async function fetchEtherscanData(
 
 async function fetchGithubData(username: string) {
   try {
-    const response = await fetch("http://localhost:8001/github", {
+    const URL="http://localhost:8001/github";
+    const response_avs = await fetchData(URL);
+    console.log("response_avs",response_avs);
+    const response = await fetch(URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username }),
