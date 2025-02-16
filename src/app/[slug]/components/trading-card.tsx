@@ -1,22 +1,37 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { TrendingUp, ArrowLeftRight, ArrowDown } from "lucide-react";
+import {
+  TrendingUp,
+  ArrowLeftRight,
+  ArrowDown,
+  Twitter,
+  Search,
+} from "lucide-react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type TradingCardProps = {
   dao: {
     tokenSymbol: string;
     tokenPrice: string;
     tokenChange24h: string;
+    members: Array<{
+      name: string;
+      twitter: string;
+      avatar: string;
+    }>;
   };
 };
 
 export default function TradingCard({ dao }: TradingCardProps) {
   const [orderType, setOrderType] = useState<"buy" | "sell">("buy");
   const [inputAmount, setInputAmount] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Hardcoded exchange rate: 1 ETH = 10 DAO tokens
   const EXCHANGE_RATE = 10;
@@ -38,6 +53,12 @@ export default function TradingCard({ dao }: TradingCardProps) {
     }
   };
 
+  const filteredMembers = dao.members.filter(
+    (member) =>
+      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.twitter.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   return (
     <Card className="border-[#3d3470] bg-[#211d47]">
       <CardHeader>
@@ -50,7 +71,7 @@ export default function TradingCard({ dao }: TradingCardProps) {
           <span className="text-sm">{dao.tokenChange24h}</span>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-8">
         <div className="space-y-4">
           <div className="flex gap-2">
             <Button
@@ -133,6 +154,52 @@ export default function TradingCard({ dao }: TradingCardProps) {
             <ArrowLeftRight className="mr-2 h-4 w-4" />
             {orderType === "buy" ? "Buy" : "Sell"} {dao.tokenSymbol}
           </Button>
+        </div>
+
+        <div className="space-y-4 border-t border-[#3d3470] pt-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-[#e0d9ff]">dAIo Members</h3>
+            <span className="text-sm text-[#b3a8e0]">
+              {dao.members.length} members
+            </span>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border border-[#3d3470] bg-[#13102b] p-2">
+            <Search className="h-5 w-5 text-[#b3a8e0]" />
+            <Input
+              placeholder="Search members..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border-none bg-transparent text-[#e0d9ff] placeholder:text-[#b3a8e0] focus-visible:ring-0"
+            />
+          </div>
+          <ScrollArea className="h-[300px] rounded-lg">
+            <div className="grid gap-2 pr-4">
+              {filteredMembers.map((member, index) => (
+                <Link
+                  key={index}
+                  href={`https://twitter.com/${member.twitter}`}
+                  target="_blank"
+                  className="flex items-center gap-3 rounded-lg border border-[#3d3470] bg-[#13102b]/50 p-3 transition-colors hover:border-[#14f195] hover:bg-[#13102b]"
+                >
+                  <Image
+                    src={member.avatar}
+                    alt={member.name}
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                  <span className="flex-1 text-sm text-[#e0d9ff]">
+                    {member.name}
+                  </span>
+                  <span className="text-sm text-[#b3a8e0]">
+                    @{member.twitter}
+                  </span>
+                  <Twitter className="h-4 w-4 text-[#14f195]" />
+                </Link>
+              ))}
+            </div>
+            <ScrollBar />
+          </ScrollArea>
         </div>
       </CardContent>
     </Card>

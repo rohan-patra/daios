@@ -59,13 +59,63 @@ const mockDaos = {
     members: [
       {
         name: "Alice Crypto",
-        twitter: "@alicecrypto",
+        twitter: "alicecrypto",
         avatar: "https://randomuser.me/api/portraits/women/1.jpg",
       },
       {
         name: "Bob Blockchain",
-        twitter: "@bobblockchain",
+        twitter: "bobblockchain",
         avatar: "https://randomuser.me/api/portraits/men/1.jpg",
+      },
+      {
+        name: "Carol Chain",
+        twitter: "carolchain",
+        avatar: "https://randomuser.me/api/portraits/women/2.jpg",
+      },
+      {
+        name: "David DeFi",
+        twitter: "daviddefi",
+        avatar: "https://randomuser.me/api/portraits/men/2.jpg",
+      },
+      {
+        name: "Eva Ethereum",
+        twitter: "evaethereum",
+        avatar: "https://randomuser.me/api/portraits/women/3.jpg",
+      },
+      {
+        name: "Frank Finance",
+        twitter: "frankfinance",
+        avatar: "https://randomuser.me/api/portraits/men/3.jpg",
+      },
+      {
+        name: "Grace Governance",
+        twitter: "gracegovernance",
+        avatar: "https://randomuser.me/api/portraits/women/4.jpg",
+      },
+      {
+        name: "Henry Hodl",
+        twitter: "henryhodl",
+        avatar: "https://randomuser.me/api/portraits/men/4.jpg",
+      },
+      {
+        name: "Ivy Investment",
+        twitter: "ivyinvestment",
+        avatar: "https://randomuser.me/api/portraits/women/5.jpg",
+      },
+      {
+        name: "Jack Yield",
+        twitter: "jackyield",
+        avatar: "https://randomuser.me/api/portraits/men/5.jpg",
+      },
+      {
+        name: "Kelly Keys",
+        twitter: "kellykeys",
+        avatar: "https://randomuser.me/api/portraits/women/6.jpg",
+      },
+      {
+        name: "Liam Liquidity",
+        twitter: "liamliquidity",
+        avatar: "https://randomuser.me/api/portraits/men/6.jpg",
       },
     ],
   },
@@ -107,13 +157,53 @@ const mockDaos = {
     members: [
       {
         name: "Charlie Digital",
-        twitter: "@charliedigital",
-        avatar: "https://randomuser.me/api/portraits/men/2.jpg",
+        twitter: "charliedigital",
+        avatar: "https://randomuser.me/api/portraits/men/7.jpg",
       },
       {
         name: "Diana NFT",
-        twitter: "@dianaNFT",
-        avatar: "https://randomuser.me/api/portraits/women/2.jpg",
+        twitter: "dianaNFT",
+        avatar: "https://randomuser.me/api/portraits/women/7.jpg",
+      },
+      {
+        name: "Emma Art",
+        twitter: "emmaart",
+        avatar: "https://randomuser.me/api/portraits/women/8.jpg",
+      },
+      {
+        name: "Felix Pixel",
+        twitter: "felixpixel",
+        avatar: "https://randomuser.me/api/portraits/men/8.jpg",
+      },
+      {
+        name: "Gina Gallery",
+        twitter: "ginagallery",
+        avatar: "https://randomuser.me/api/portraits/women/9.jpg",
+      },
+      {
+        name: "Harry Hologram",
+        twitter: "harryhologram",
+        avatar: "https://randomuser.me/api/portraits/men/9.jpg",
+      },
+      {
+        name: "Iris Illustrator",
+        twitter: "irisillustrator",
+        avatar: "https://randomuser.me/api/portraits/women/10.jpg",
+      },
+      {
+        name: "Jake JPEG",
+        twitter: "jakejpeg",
+        avatar: "https://randomuser.me/api/portraits/men/10.jpg",
+      },
+      {
+        name: "Kate Krypto",
+        twitter: "katekrypto",
+        avatar: "https://randomuser.me/api/portraits/women/11.jpg",
+      },
+      {
+        name: "Leo Layers",
+        twitter: "leolayers",
+        avatar: "https://randomuser.me/api/portraits/men/11.jpg",
       },
     ],
   },
@@ -155,13 +245,53 @@ const mockDaos = {
     members: [
       {
         name: "Eve Green",
-        twitter: "@evegreen",
-        avatar: "https://randomuser.me/api/portraits/women/3.jpg",
+        twitter: "evegreen",
+        avatar: "https://randomuser.me/api/portraits/women/12.jpg",
       },
       {
         name: "Frank Earth",
-        twitter: "@frankearth",
-        avatar: "https://randomuser.me/api/portraits/men/3.jpg",
+        twitter: "frankearth",
+        avatar: "https://randomuser.me/api/portraits/men/12.jpg",
+      },
+      {
+        name: "Grace Garden",
+        twitter: "gracegarden",
+        avatar: "https://randomuser.me/api/portraits/women/13.jpg",
+      },
+      {
+        name: "Hugo Habitat",
+        twitter: "hugohabitat",
+        avatar: "https://randomuser.me/api/portraits/men/13.jpg",
+      },
+      {
+        name: "Iris Impact",
+        twitter: "irisimpact",
+        avatar: "https://randomuser.me/api/portraits/women/14.jpg",
+      },
+      {
+        name: "Jack Justice",
+        twitter: "jackjustice",
+        avatar: "https://randomuser.me/api/portraits/men/14.jpg",
+      },
+      {
+        name: "Karen Kind",
+        twitter: "karenkind",
+        avatar: "https://randomuser.me/api/portraits/women/15.jpg",
+      },
+      {
+        name: "Luke Life",
+        twitter: "lukelife",
+        avatar: "https://randomuser.me/api/portraits/men/15.jpg",
+      },
+      {
+        name: "Maya Mother",
+        twitter: "mayamother",
+        avatar: "https://randomuser.me/api/portraits/women/16.jpg",
+      },
+      {
+        name: "Noah Nature",
+        twitter: "noahnature",
+        avatar: "https://randomuser.me/api/portraits/men/16.jpg",
       },
     ],
   },
@@ -308,43 +438,6 @@ export default function DaoPage({ params }: Props) {
 
           <TradingCard dao={dao} />
         </div>
-
-        <Card className="border-[#3d3470] bg-[#211d47]">
-          <CardHeader>
-            <CardTitle className="text-[#e0d9ff]">dAIo Members</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-6 flex items-center gap-2 rounded-lg border border-[#3d3470] bg-[#13102b] p-2">
-              <Search className="h-5 w-5 text-[#b3a8e0]" />
-              <Input
-                placeholder="Search members..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="border-none bg-transparent text-[#e0d9ff] placeholder:text-[#b3a8e0] focus-visible:ring-0"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              {filteredMembers.map((member, index) => (
-                <Link
-                  key={index}
-                  href={`https://twitter.com/${member.twitter}`}
-                  target="_blank"
-                  className="flex items-center space-x-3 rounded-lg border border-[#3d3470] bg-[#211d47] p-4 transition-colors hover:border-[#14f195] hover:bg-[#13102b]"
-                >
-                  <Image
-                    src={member.avatar}
-                    alt={member.name}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                  <span className="flex-1 text-[#e0d9ff]">{member.name}</span>
-                  <Twitter className="h-4 w-4 text-[#14f195]" />
-                </Link>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </main>
   );
