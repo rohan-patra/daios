@@ -295,6 +295,173 @@ const mockDaos = {
       },
     ],
   },
+  "revenge-dao": {
+    name: "RevengeDAO",
+    image: "https://i.imgur.com/hBKRN4C.png",
+    description:
+      "This is a DAO about revenge. Revenge for the trenches. Revenge for all those who lost money on this meme coin cycle, but contributed to the ecosystem in code, verified through GitHub. Verify losses via wallet connection.",
+    tokenAddress: "0xabcdefabcdefabcdefabcdefabcdefabcdef",
+    tokenSymbol: "REV",
+    tokenPrice: "4.20",
+    tokenChange24h: "+12.34%",
+    discordUrl: "https://discord.gg/revengedao",
+    eligibilityCriteria: [
+      {
+        title: "Contribution to Blockchain Development",
+        description:
+          "A proven track record of contributing to the blockchain ecosystem through significant open-source projects, evidenced by GitHub activities.",
+        icon: "github",
+      },
+      {
+        title: "Financial Commitment and Loss Verification",
+        description:
+          "A requirement to demonstrate financial engagement and losses in the cryptocurrency space, verified through direct wallet connection.",
+        icon: "wallet",
+      },
+    ],
+    members: [
+      {
+        name: "Rick Rebound",
+        twitter: "rickrebound",
+        avatar: "https://randomuser.me/api/portraits/men/17.jpg",
+      },
+      {
+        name: "Sarah Stoploss",
+        twitter: "sarahstoploss",
+        avatar: "https://randomuser.me/api/portraits/women/17.jpg",
+      },
+      {
+        name: "Tom Turnaround",
+        twitter: "tomturnaround",
+        avatar: "https://randomuser.me/api/portraits/men/18.jpg",
+      },
+      {
+        name: "Luna Liquidator",
+        twitter: "lunaliquidator",
+        avatar: "https://randomuser.me/api/portraits/women/18.jpg",
+      },
+      {
+        name: "Peter Pivot",
+        twitter: "peterpivot",
+        avatar: "https://randomuser.me/api/portraits/men/19.jpg",
+      },
+      {
+        name: "Nina NoFomo",
+        twitter: "ninanofomo",
+        avatar: "https://randomuser.me/api/portraits/women/19.jpg",
+      },
+      {
+        name: "Alexis Adapt",
+        twitter: "alexisadapt",
+        avatar: "https://randomuser.me/api/portraits/men/20.jpg",
+      },
+      {
+        name: "Bianca Bounce",
+        twitter: "biancabounce",
+        avatar: "https://randomuser.me/api/portraits/women/20.jpg",
+      },
+      {
+        name: "Cameron Counter",
+        twitter: "cameroncounter",
+        avatar: "https://randomuser.me/api/portraits/men/21.jpg",
+      },
+      {
+        name: "Diana Diversify",
+        twitter: "dianadiversify",
+        avatar: "https://randomuser.me/api/portraits/women/21.jpg",
+      },
+      {
+        name: "Ethan Edge",
+        twitter: "ethanedge",
+        avatar: "https://randomuser.me/api/portraits/men/22.jpg",
+      },
+      {
+        name: "Florence Flex",
+        twitter: "florenceflex",
+        avatar: "https://randomuser.me/api/portraits/women/22.jpg",
+      },
+      {
+        name: "Gabriel Growth",
+        twitter: "gabrielgrowth",
+        avatar: "https://randomuser.me/api/portraits/men/23.jpg",
+      },
+      {
+        name: "Hannah Hedge",
+        twitter: "hannahhedge",
+        avatar: "https://randomuser.me/api/portraits/women/23.jpg",
+      },
+      {
+        name: "Ian Insight",
+        twitter: "ianinsight",
+        avatar: "https://randomuser.me/api/portraits/men/24.jpg",
+      },
+      {
+        name: "Julia Jump",
+        twitter: "julijump",
+        avatar: "https://randomuser.me/api/portraits/women/24.jpg",
+      },
+      {
+        name: "Kevin Keep",
+        twitter: "kevinkeep",
+        avatar: "https://randomuser.me/api/portraits/men/25.jpg",
+      },
+      {
+        name: "Lily Leverage",
+        twitter: "lilleverage",
+        avatar: "https://randomuser.me/api/portraits/women/25.jpg",
+      },
+      {
+        name: "Matthew Margin",
+        twitter: "matthewmargin",
+        avatar: "https://randomuser.me/api/portraits/men/26.jpg",
+      },
+      {
+        name: "Natalie Net",
+        twitter: "natalienet",
+        avatar: "https://randomuser.me/api/portraits/women/26.jpg",
+      },
+      {
+        name: "Oliver Opportunity",
+        twitter: "oliveropportunity",
+        avatar: "https://randomuser.me/api/portraits/men/27.jpg",
+      },
+      {
+        name: "Penelope Pivot",
+        twitter: "penelopypivot",
+        avatar: "https://randomuser.me/api/portraits/women/27.jpg",
+      },
+      {
+        name: "Quincy Quality",
+        twitter: "quincyquality",
+        avatar: "https://randomuser.me/api/portraits/men/28.jpg",
+      },
+      {
+        name: "Rachel Risk",
+        twitter: "rachelrisk",
+        avatar: "https://randomuser.me/api/portraits/women/28.jpg",
+      },
+      {
+        name: "Samuel Scale",
+        twitter: "samuelscale",
+        avatar: "https://randomuser.me/api/portraits/men/29.jpg",
+      },
+      {
+        name: "Tessa Trade",
+        twitter: "tessatrade",
+        avatar: "https://randomuser.me/api/portraits/women/29.jpg",
+      },
+      {
+        name: "Ursula Upside",
+        twitter: "ursulaupside",
+        avatar: "https://randomuser.me/api/portraits/men/30.jpg",
+      },
+      {
+        name: "Victoria Value",
+        twitter: "victoriavalue",
+        avatar: "https://randomuser.me/api/portraits/women/30.jpg",
+      },
+    ],
+  },
 };
 
 type Props = {

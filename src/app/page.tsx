@@ -467,15 +467,16 @@ export default function LandingPage() {
                     placeholder="Enter your email"
                     type="email"
                   />
-                  <MotionButton
-                    type="submit"
-                    className="bg-[#14f195] text-[#13102b] hover:bg-[#0dc77b]"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Get Started
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </MotionButton>
+                  <Link href="/launch">
+                    <MotionButton
+                      className="bg-[#14f195] text-[#13102b] hover:bg-[#0dc77b]"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Get Started
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </MotionButton>
+                  </Link>
                 </form>
                 <p className="text-xs text-[#b3a8e0]">
                   By signing up, you agree to our{" "}

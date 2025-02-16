@@ -120,7 +120,7 @@ export default function LaunchPage() {
   useEffect(() => {
     if (hash) {
       toast.success("Transaction submitted!");
-      router.push(`/defi-governance`);
+      router.push(`/revenge-dao`);
     }
   }, [hash, router]);
 
