@@ -24,7 +24,10 @@ const openai = new OpenAI({
 
 const CHATS_FILE = path.join(process.cwd(), "data/chats.json");
 
-async function fetchEtherscanData(wallet_address: string, chain_id: number = 1) {
+async function fetchEtherscanData(
+  wallet_address: string,
+  chain_id: number = 1,
+) {
   try {
     const response = await fetch("http://localhost:8001/etherscan", {
       method: "POST",
@@ -126,6 +129,7 @@ Follow these rules:
 - Keep track of which criteria are verified and which are pending
 - Make decisions based ONLY on the verified criteria
 - Provide clear feedback for each verification step
+- Each message from you should either be the final tool call or a prompt for the user to respond to
 
 IMPORTANT: You must respond in JSON format with this structure:
 {
@@ -206,12 +210,16 @@ export async function POST(req: NextRequest) {
       currentChat = chats[chatId];
       let updatedMessage = message;
       if (accountConnection) {
-        currentChat.connectedAccounts[accountConnection.type] = accountConnection.connected;
+        currentChat.connectedAccounts[accountConnection.type] =
+          accountConnection.connected;
         const accountData = accountConnection.data?.[accountConnection.type];
-      
+
         if (accountData) {
-          console.log(`Fetching ${accountConnection.type} data for:`, accountData);
-      
+          console.log(
+            `Fetching ${accountConnection.type} data for:`,
+            accountData,
+          );
+
           if (accountConnection.type === "github") {
             const githubData = await fetchGithubData(accountData);
             if (githubData) {
@@ -241,7 +249,7 @@ export async function POST(req: NextRequest) {
             }
           }
         }
-      }          
+      }
 
       currentChat.messages.push({
         role: "user",
