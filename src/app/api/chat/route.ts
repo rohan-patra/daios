@@ -24,6 +24,63 @@ const openai = new OpenAI({
 
 const CHATS_FILE = path.join(process.cwd(), "data/chats.json");
 
+async function fetchEtherscanData(wallet_address: string, chain_id: number = 1) {
+  try {
+    const response = await fetch("http://localhost:8001/etherscan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wallet_address, chain_id }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Etherscan API error: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Etherscan fetch error:", error);
+    return null;
+  }
+}
+
+async function fetchGithubData(username: string) {
+  try {
+    const response = await fetch("http://localhost:8001/github", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("GitHub fetch error:", error);
+    return null;
+  }
+}
+
+async function fetchTwitterData(username: string) {
+  try {
+    const response = await fetch("http://localhost:8001/twitter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Twitter API error: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Twitter fetch error:", error);
+    return null;
+  }
+}
+
 async function ensureChatsFile() {
   try {
     await fs.mkdir(path.dirname(CHATS_FILE), { recursive: true });
@@ -62,7 +119,9 @@ Follow these rules:
   1. State which criterion you're currently evaluating
   2. Request the relevant account connection if needed
   3. After receiving a connection, explicitly confirm the username/address received
-  4. Verify if the criterion is met before moving to the next one
+  4. Analyze the data from the respective API endpoint and use to evaluate if the criterion is met
+  5. Verify if the criterion is met before moving to the next one
+
 - Do not proceed to the next criterion until the current one is fully verified
 - Keep track of which criteria are verified and which are pending
 - Make decisions based ONLY on the verified criteria
@@ -147,13 +206,42 @@ export async function POST(req: NextRequest) {
       currentChat = chats[chatId];
       let updatedMessage = message;
       if (accountConnection) {
-        currentChat.connectedAccounts[accountConnection.type] =
-          accountConnection.connected;
+        currentChat.connectedAccounts[accountConnection.type] = accountConnection.connected;
         const accountData = accountConnection.data?.[accountConnection.type];
+      
         if (accountData) {
-          updatedMessage = `${message} (${accountConnection.type}: ${accountData})`;
+          console.log(`Fetching ${accountConnection.type} data for:`, accountData);
+      
+          if (accountConnection.type === "github") {
+            const githubData = await fetchGithubData(accountData);
+            if (githubData) {
+              currentChat.messages.push({
+                role: "system",
+                content: `GitHub Activity Summary:\n ${JSON.stringify(githubData, null, 2)}`,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          } else if (accountConnection.type === "twitter") {
+            const twitterData = await fetchTwitterData(accountData);
+            if (twitterData) {
+              currentChat.messages.push({
+                role: "system",
+                content: `Twitter Activity Summary:\n ${JSON.stringify(twitterData, null, 2)}`,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          } else if (accountConnection.type === "wallet") {
+            const etherscanData = await fetchEtherscanData(accountData);
+            if (etherscanData) {
+              currentChat.messages.push({
+                role: "system",
+                content: `Etherscan Wallet Summary:\n ${JSON.stringify(etherscanData, null, 2)}`,
+                timestamp: new Date().toISOString(),
+              });
+            }
+          }
         }
-      }
+      }          
 
       currentChat.messages.push({
         role: "user",
