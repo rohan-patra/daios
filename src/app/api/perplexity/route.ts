@@ -1,26 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { storeFinalJSONSession, getStoredData } from "@/utils/session";
 
 const BASE_URL = "http://0.0.0.0:8000"; 
 
-async function callPythonAPI(functionName: string, payload: object) {
-  try {
-    const response = await fetch(`${BASE_URL}/${functionName}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      console.error(`Error calling ${functionName}:`, await response.text());
-      return null;
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error(`Failed to call ${functionName}:`, error);
-    return null;
-  }
-}
 
 function sanitizeOpenAIResponse(response: string): string {
   let sanitized = response.trim();
@@ -32,7 +14,7 @@ export async function POST(req: NextRequest) {
   try {
     // 1) Parse Request Body
     const body = await req.json();
-    const { daoName, daoDescription, personName, username } = body;
+    const { daoName, daoDescription, personName } = body;
 
     // Basic Validations
     if (!daoName || !daoDescription || !personName) {
@@ -263,20 +245,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 
+    // Store the final JSON in a session cookie
+    const uuid = Math.random().toString(36).substring(2, 15);
+    console.log("Storing final JSON in session:", uuid);
+    storeFinalJSONSession(uuid, finalJSON);
 
-    for (const functionName of suggestedFunctions) {
-    console.log(`Calling ${functionName} on Python server...`);
-
-    const apiResponse = await callPythonAPI(functionName, { username });
-
-    if (apiResponse) {
-        console.log(`Received response from ${functionName}:`, apiResponse);
-    }
-
-    }
     // All done!
-    return NextResponse.json(finalJSON, { status: 200 });
-  } catch (error) {
+    return NextResponse.json({ suggestedFunctions }, { status: 200 });
+} catch (error) {
     console.error("Error processing request:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
