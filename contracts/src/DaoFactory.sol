@@ -14,6 +14,7 @@ contract DaoFactory {
         address owner;
         uint256 mintPrice;
         uint256 maxMintPerNFT;
+        bool liquiditySeeded;
     }
 
     Dao[] public daos;
@@ -25,6 +26,8 @@ contract DaoFactory {
         uint256 mintPrice,
         uint256 maxMintPerNFT
     );
+
+    event LiquiditySeeded(uint256 indexed daoIndex);
 
     /// @notice Creates a new DAO instance
     /// @param baseURI Base URI for the NFT metadata
@@ -55,8 +58,11 @@ contract DaoFactory {
             maxMintPerNFT
         );
 
+        // Mint first NFT to creator for initial token minting
+        uint256 tokenId = nftContract.mint(msg.sender);
+
         // Mint the initial supply to the DAO creator
-        tokenContract.mint(1, tokenInitialSupply);
+        tokenContract.mint{value: tokenInitialSupply * mintPrice}(tokenId, tokenInitialSupply);
 
         daos.push(
             Dao({
@@ -64,11 +70,26 @@ contract DaoFactory {
                 token: address(tokenContract),
                 owner: msg.sender,
                 mintPrice: mintPrice,
-                maxMintPerNFT: maxMintPerNFT
+                maxMintPerNFT: maxMintPerNFT,
+                liquiditySeeded: false
             })
         );
 
         emit DaoCreated(msg.sender, address(nftContract), address(tokenContract), mintPrice, maxMintPerNFT);
+    }
+
+    /// @notice Distributes liquidity and seeds Uniswap pool for a DAO
+    /// @param daoIndex The index of the DAO to seed liquidity for
+    function seedLiquidity(uint256 daoIndex) external {
+        require(daoIndex < daos.length, "Invalid DAO index");
+        Dao storage dao = daos[daoIndex];
+        require(msg.sender == dao.owner, "Not DAO owner");
+        require(!dao.liquiditySeeded, "Liquidity already seeded");
+
+        DaoToken(dao.token).distributeLiquidityAndSeedPool();
+        dao.liquiditySeeded = true;
+
+        emit LiquiditySeeded(daoIndex);
     }
 
     /// @notice Returns the DAO at a given index
